@@ -115,6 +115,15 @@ func (c *Conda) UpdateAndClean() error {
 	c.Log.BeginStep("Installing Dependencies")
 	c.Log.BeginStep("Installing conda environment from environment.yml")
 
+	if os.Getenv("CONDA_SSL_VERIFY") != "" {
+		conda_ssl_verify = os.Getenv("CONDA_SSL_VERIFY")
+		ssl_args := []string{"config", "--set", "--ssl_verify", conda_ssl_verify}
+		c.Log.Debug("Run Conda: %s %s", filepath.Join(condaHome, "bin", "conda"), strings.Join(ssl_args, " "))
+		if err := c.Command.Execute("/", indentWriter(os.Stdout), indentWriter(os.Stderr), filepath.Join(condaHome, "bin", "conda"), ssl_args...); err != nil {
+			return fmt.Errorf("Could not run conda config update: %v", err)
+		}
+	}
+
 	verbosity := []string{"--quiet"}
 	if os.Getenv("BP_DEBUG") != "" {
 		verbosity = []string{"--debug", "--verbose"}
